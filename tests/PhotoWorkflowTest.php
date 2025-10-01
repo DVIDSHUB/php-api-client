@@ -97,12 +97,21 @@ class PhotoWorkflowTest extends TestCase
                 ]
             ]));
 
+            $closeBatchResponse = new Response(200, [], json_encode([
+                'data' => [
+                    'id' => 'batch-123',
+                    'type' => 'batch',
+                    'attributes' => ['closed' => true]
+                ]
+            ]));
+
             $client = $this->createMockedClient([
                 $batchResponse,
                 $uploadResponse,
                 $fileUploadResponse,
                 $virinResponse,
-                $photoResponse
+                $photoResponse,
+                $closeBatchResponse
             ]);
 
             // Act - Execute complete workflow
@@ -125,7 +134,7 @@ class PhotoWorkflowTest extends TestCase
             $this->assertEquals('241001-A-AB123-001', $photo->virin);
 
             // Verify all workflow steps were executed
-            $this->assertCount(5, $this->requestHistory);
+            $this->assertCount(6, $this->requestHistory);
         
             // Verify workflow sequence
             $this->assertEquals('POST', $this->requestHistory[0]['request']->getMethod());
@@ -142,6 +151,9 @@ class PhotoWorkflowTest extends TestCase
             
             $this->assertEquals('POST', $this->requestHistory[4]['request']->getMethod());
             $this->assertEquals('/batch/batch-123/photo', $this->requestHistory[4]['request']->getUri()->getPath());
+            
+            $this->assertEquals('PATCH', $this->requestHistory[5]['request']->getMethod());
+            $this->assertEquals('/batch/batch-123', $this->requestHistory[5]['request']->getUri()->getPath());
         } finally {
             // Clean up the temporary file
             if (file_exists($tempFile)) {

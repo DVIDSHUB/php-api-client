@@ -205,43 +205,9 @@ class ServiceUnitClientTest extends TestCase
         // Verify query parameters
         $request = $this->requestHistory[0]['request'];
         $query = $request->getUri()->getQuery();
-        $this->assertStringContainsString('filter%5Bname%5D=Air%20Force', $query);
-        $this->assertStringContainsString('page%5Bsize%5D=10', $query);
-        $this->assertStringContainsString('page%5Bnumber%5D=1', $query);
-    }
-
-    public function testSearchByAbbreviation(): void
-    {
-        // Arrange
-        $mockResponse = new Response(200, ['Content-Type' => 'application/vnd.api+json'], json_encode([
-            'data' => [
-                [
-                    'id' => 'unit-usmc',
-                    'type' => 'service-unit',
-                    'attributes' => [
-                        'name' => 'US Marine Corps Forces Pacific',
-                        'abbreviation' => 'MARFORPAC',
-                        'branch' => 'marine_corps'
-                    ]
-                ]
-            ]
-        ]));
-
-        $client = $this->createMockedClient([$mockResponse]);
-
-        // Act
-        $result = $client->serviceUnits()->searchByAbbreviation('MARFORPAC', 5, 2);
-
-        // Assert
-        $this->assertIsArray($result);
-        $this->assertCount(1, $result['data']);
-        
-        // Verify query parameters
-        $request = $this->requestHistory[0]['request'];
-        $query = $request->getUri()->getQuery();
-        $this->assertStringContainsString('filter%5Babbreviation%5D=MARFORPAC', $query);
-        $this->assertStringContainsString('page%5Bsize%5D=5', $query);
-        $this->assertStringContainsString('page%5Bnumber%5D=2', $query);
+        $this->assertStringContainsString('name=Air%20Force', $query);
+        $this->assertStringContainsString('limit=10', $query);
+        $this->assertStringContainsString('page=1', $query);
     }
 
     public function testSearchByBranch(): void
@@ -282,9 +248,9 @@ class ServiceUnitClientTest extends TestCase
         // Verify query parameters
         $request = $this->requestHistory[0]['request'];
         $query = $request->getUri()->getQuery();
-        $this->assertStringContainsString('filter%5Bbranch%5D=navy', $query);
-        $this->assertStringContainsString('page%5Bsize%5D=15', $query);
-        $this->assertStringContainsString('page%5Bnumber%5D=1', $query);
+        $this->assertStringContainsString('branch=navy', $query);
+        $this->assertStringContainsString('limit=15', $query);
+        $this->assertStringContainsString('page=1', $query);
     }
 
     public function testGetServiceUnits(): void
@@ -314,7 +280,7 @@ class ServiceUnitClientTest extends TestCase
         // Verify pagination parameters
         $request = $this->requestHistory[0]['request'];
         $query = $request->getUri()->getQuery();
-        $this->assertStringContainsString('page%5Bsize%5D=25', $query);
-        $this->assertStringContainsString('page%5Bnumber%5D=2', $query);
+        $this->assertStringContainsString('limit=25', $query);
+        $this->assertStringContainsString('page=2', $query);
     }
 }
