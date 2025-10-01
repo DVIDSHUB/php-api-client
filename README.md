@@ -16,7 +16,7 @@ A modern PHP client library for the DVIDS (Defense Video & Imagery Distribution 
 ## Installation
 
 ```bash
-composer require dvids/api-client "^1.0"
+composer require dvids/api-client "^0.0"
 ```
 
 ### Requirements
