@@ -1,0 +1,107 @@
+name: Release DVIDS PHP SDK
+
+on:
+  push:
+    tags:
+      - 'v*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write  # Required for creating releases
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: json, curl
+          tools: composer:v2
+      
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Remove 'v' prefix from tag to get semantic version
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+      
+      - name: Update version in Version.php
+        run: |
+          # Use the PHP script to update the version
+          php scripts/update-version.php ${{ steps.version.outputs.version }}
+          
+          # Verify the change was made
+          echo "Updated version in Version.php:"
+          grep "SDK_VERSION" src/Version.php
+      
+      - name: Install dependencies
+        run: composer install --no-dev --optimize-autoloader
+      
+      - name: Run tests
+        run: |
+          composer install --dev
+          ./vendor/bin/phpunit
+      
+      - name: Commit version update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add src/Version.php
+          git commit -m "Update SDK version to ${{ steps.version.outputs.version }}" || exit 0
+          git tag -f ${{ github.ref_name }}  # Update the tag to point to the new commit
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Simple changelog generation - you can customize this
+          CHANGELOG=$(git log --pretty=format:"* %s" $(git describe --tags --abbrev=0 HEAD^)..HEAD || echo "Initial release")
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "DVIDS PHP SDK ${{ steps.version.outputs.version }}"
+          body: |
+            ## Release ${{ steps.version.outputs.version }}
+            
+            ### Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### Installation
+            ```bash
+            composer require dvids/php-sdk:^${{ steps.version.outputs.version }}
+            ```
+            
+            ### Documentation
+            See the [README](README.md) for usage examples and API documentation.
+          draft: false
+          prerelease: false
+          files: dvids-php-sdk-${{ steps.version.outputs.version }}.tar.gz
+      
+      - name: Create Composer package
+        run: |
+          # Clean up dev dependencies and create a clean package
+          rm -rf vendor/
+          composer install --no-dev --optimize-autoloader --no-scripts
+          
+          # Create distribution archive
+          tar -czf dvids-php-sdk-${{ steps.version.outputs.version }}.tar.gz \
+            --exclude='.git*' \
+            --exclude='tests' \
+            --exclude='phpunit.xml' \
+            --exclude='.github' \
+            --exclude='examples' \
+            .
+      

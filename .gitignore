@@ -1,0 +1,5 @@
+.idea
+.ddev
+.phpunit.result.cache
+vendor/
+/tests/_output/
