@@ -74,7 +74,7 @@ $unitSearchResults = $authenticatedClient->serviceUnits()->searchByName('Army', 
 if (!empty($unitSearchResults['data'])) {
     // Pick the first one
     $unit = \DvidsApi\Model\ServiceUnit::fromArray($unitSearchResults['data'][0]);
-    echo "{$unit->name} ({$unit->abbreviation}) - Branch: {$unit->branch->value}\n";
+    echo "{$unit->name} ({$unit->abbreviation}) - Branch: {$unit->branch->name}\n";
 }
 
 // Simplified workflow - handles batch creation and upload internally
@@ -108,7 +108,7 @@ try {
     if (!empty($searchResults['data'])) {
         foreach ($searchResults['data'] as $unitData) {
             $unit = \DvidsApi\Model\ServiceUnit::fromArray($unitData);
-            echo "  - {$unit->name} ({$unit->abbreviation}) - Branch: {$unit->branch->value}\n";
+            echo "  - {$unit->name} ({$unit->abbreviation}) - Branch: {$unit->branch->name}\n";
         }
     } else {
         echo "  No units found\n";
@@ -151,7 +151,7 @@ try {
         $specificUnit = $authenticatedClient->serviceUnits()->getServiceUnit($firstUnitId);
         echo "  - Name: {$specificUnit->name}\n";
         echo "  - Abbreviation: {$specificUnit->abbreviation}\n";
-        echo "  - Branch: {$specificUnit->branch->value}\n";
+        echo "  - Branch: {$specificUnit->branch->name}\n";
         echo "  - DVIAN: " . ($specificUnit->dvian ?? 'N/A') . "\n";
         echo "  - Requires Publishing Approval: " . ($specificUnit->requiresPublishingApproval ? 'Yes' : 'No') . "\n";
         echo "\n";
@@ -182,9 +182,9 @@ try {
     // 7. Raw search with custom parameters
     echo "7. Raw search with custom parameters:\n";
     $customSearch = $authenticatedClient->serviceUnits()->searchServiceUnits([
-        'filter[branch]' => 'air_force',
-        'page[size]' => 3,
-        'page[number]' => 1,
+        'branch' => 'air_force',
+        'limit' => 3,
+        'page' => 1,
         'sort' => 'name'
     ]);
     
