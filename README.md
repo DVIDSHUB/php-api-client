@@ -63,6 +63,7 @@ if (isset($_GET['code']) && isset($_GET['state'])) {
 }
 ```
 
+### Upload a single photo (simple case, no batch interaction)
 ```php
 // Add your access token from OAuth2 flow (see example below)
 $authenticatedClient = $client->withAccessToken('your-access-token');
